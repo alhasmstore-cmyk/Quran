@@ -1,34 +1,13 @@
-/* ============================================================
-   firebase-config.js — إعدادات اتصال Firebase
-   ============================================================
-   ⚠️ هام جداً: استبدل القيم أدناه بإعدادات مشروعك الخاص في Firebase.
-   احصل عليها من: Firebase Console → Project Settings → SDK setup
-   تأكد أيضاً من تفعيل "Realtime Database" من قائمة Build في
-   لوحة تحكم Firebase، وضبط قواعد الأمان (Rules) المناسبة.
-
-   مثال لقواعد أمان بسيطة تناسب نموذج "هوية العائلة + PIN" المستخدم
-   هنا (للتطوير فقط — يُفضّل قواعد أكثر صرامة قبل النشر الفعلي):
-
-   {
-     "rules": {
-       "families": {
-         "$familyId": {
-           ".read": true,
-           ".write": true
-         }
-       }
-     }
-   }
-   ============================================================ */
-
+// إعدادات اتصال سيرفر Firebase الحقيقي الخاص بمشروع رحلة النور
 const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBmNuF85OGfwvbFzRTrXepw1-HtNoHV8Cs",
+  authDomain: "quran-d0bc0.firebaseapp.com",
+  databaseURL: "https://quran-d0bc0-default-rtdb.firebaseio.com", // تم بناؤه تلقائياً بناءً على معرف مشروعك
+  projectId: "quran-d0bc0",
+  storageBucket: "quran-d0bc0.firebasestorage.app",
+  messagingSenderId: "675683659315",
+  appId: "1:675683659315:web:056882e5d94f099b3c3d46",
+  measurementId: "G-01BF2N1DLK"
 };
 
 if (typeof window !== "undefined") {
