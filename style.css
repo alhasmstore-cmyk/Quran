@@ -1160,6 +1160,99 @@ input:focus-visible,
 }
 
 /* ============================================================
+   [إضافة] شهادة تقدير عند إتمام محطة/مرحلة — تصميم نظيف بلا
+   أيقونات تزيينية إضافية (غير الرموز الواردة ضمن نص الشهادة
+   المعتمد نفسه)
+   ============================================================ */
+
+.phase-cert-modal-inner {
+  width: min(620px, 94vw);
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.phase-cert-card {
+  width: 100%;
+  background: var(--white);
+  border: 2px solid var(--sand-200);
+  border-radius: var(--radius-lg);
+  padding: 42px 36px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.22);
+  text-align: center;
+}
+
+.phase-cert-emblem-line {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold-dark);
+  margin: 0 0 22px;
+  letter-spacing: 1px;
+}
+
+.phase-cert-line {
+  font-family: var(--font-quran);
+  font-size: 17px;
+  line-height: 2.1;
+  color: var(--ink);
+  margin: 0 0 16px;
+}
+
+.phase-cert-name-line {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--theme-text);
+  margin: 0 0 18px;
+  padding: 14px 10px;
+  border-top: 1px solid var(--sand-200);
+  border-bottom: 1px solid var(--sand-200);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.phase-cert-surahs-line {
+  font-family: var(--font-quran);
+  font-size: 16.5px;
+  line-height: 2.1;
+  color: var(--ink-soft);
+  background: var(--sand-50);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin: 0 0 18px;
+}
+
+.phase-cert-closing-line {
+  font-family: var(--font-quran);
+  font-size: 15px;
+  line-height: 2;
+  color: var(--ink-soft);
+  margin: 0 0 18px;
+}
+
+.phase-cert-date {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.phase-cert-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.phase-cert-close-btn {
+  position: static;
+  box-shadow: none;
+}
+
+/* ============================================================
    استجابة للشاشات الصغيرة
    ============================================================ */
 
@@ -1171,6 +1264,12 @@ input:focus-visible,
   .badges-grid { grid-template-columns: repeat(2, 1fr); }
   .cert-name { font-size: 26px; }
   .cert-stats { gap: 14px; }
+  .phase-cert-card { padding: 28px 18px; }
+  .phase-cert-emblem-line { font-size: 19px; }
+  .phase-cert-name-line { font-size: 19px; padding: 12px 6px; }
+  .phase-cert-line { font-size: 15px; line-height: 1.9; }
+  .phase-cert-surahs-line { font-size: 14.5px; line-height: 1.9; padding: 12px 10px; }
+  .phase-cert-closing-line { font-size: 13.5px; line-height: 1.8; }
 }
 
 /* تقليل الحركة لمن يفضل ذلك */
@@ -1197,7 +1296,9 @@ input:focus-visible,
   body * { visibility: hidden; }
 
   #screen-coronation,
-  #screen-coronation * {
+  #screen-coronation *,
+  #phaseCertificateModal,
+  #phaseCertificateModal * {
     visibility: visible;
   }
 
@@ -1222,6 +1323,29 @@ input:focus-visible,
   .certificate-card {
     box-shadow: none;
     border: 8px double var(--gold);
+    width: 100%;
+    max-width: 700px;
+    page-break-inside: avoid;
+  }
+
+  /* عزل شهادة المحطة عند الطباعة، وإخفاء أزرار التحكم وطبقة الخلفية الداكنة */
+  #phaseCertificateModal {
+    position: absolute;
+    inset: 0;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: white !important;
+    padding: 0;
+  }
+
+  .phase-cert-actions {
+    display: none !important;
+  }
+
+  .phase-cert-card {
+    box-shadow: none;
+    border: 2px solid var(--sand-200);
     width: 100%;
     max-width: 700px;
     page-break-inside: avoid;
