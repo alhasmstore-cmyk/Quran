@@ -538,13 +538,17 @@
     } else {
       const first = ayahs[0];
       const { basmala, rest } = splitBasmala(first.text);
-      const displayBasmala = basmala || "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
-      basmalaHTML = `<span class="basmala-block">${displayBasmala}</span>`;
 
-      bodyAyahs = ayahs.map((a, idx) => {
-        if (idx === 0) return { ...a, text: rest };
-        return a;
-      });
+      if (basmala) {
+        // البسملة اكتُشفت فعلياً ضمن نص الآية القادم من الـ API: اعرضها كما وردت تماماً
+        // (دون أي نص محلي مُضاف) في سطر مستقل أعلى السورة.
+        basmalaHTML = `<span class="basmala-block">${escapeHTML(basmala)}</span>`;
+        bodyAyahs = ayahs.map((a, idx) => (idx === 0 ? { ...a, text: rest } : a));
+      } else {
+        // لم تُكتشف بسملة منفصلة عن الآية الأولى: اعرض نص الـ API كما هو دون أي تعديل
+        // أو إضافة محلية، حسب المتطلب.
+        bodyAyahs = ayahs;
+      }
     }
 
     state.currentAyahs = bodyAyahs; // يُستخدم لاحقاً لبناء تحدي الكلمة المفقودة
@@ -585,6 +589,7 @@
         document.getElementById("loopSurahToggle").checked = false;
         state.loopSurahMode = false;
       }
+      if (state.resetAyahLoopCount) state.resetAyahLoopCount();
     });
     document.getElementById("loopSurahToggle").addEventListener("change", e => {
       state.loopSurahMode = e.target.checked;
@@ -592,6 +597,7 @@
         document.getElementById("loopAyahToggle").checked = false;
         state.loopAyahMode = false;
       }
+      if (state.resetAyahLoopCount) state.resetAyahLoopCount();
     });
 
     const actionRow = document.getElementById("actionRow");
@@ -627,6 +633,9 @@
     let ayahLoopCount = 0;
     const AYAH_LOOP_TARGET = 3;
 
+    // يتيح لمستمعي تبديل أزرار التكرار (خارج هذا النطاق) تصفير العدّاد عند تغيير الوضع
+    state.resetAyahLoopCount = () => { ayahLoopCount = 0; };
+
     playBtn.addEventListener("click", () => {
       if (isPlaying) {
         audio.pause();
@@ -657,15 +666,7 @@
     audio.addEventListener("ended", () => {
       isPlaying = false;
 
-      if (state.loopAyahMode && ayahLoopCount < AYAH_LOOP_TARGET - 1) {
-        ayahLoopCount += 1;
-        statusEl.textContent = `إعادة التكرار (${toArabicDigits(ayahLoopCount + 1)}/${toArabicDigits(AYAH_LOOP_TARGET)})... 🔁`;
-        audio.currentTime = 0;
-        const p = audio.play();
-        if (p !== undefined) p.catch(() => {});
-        return;
-      }
-
+      // [تكرار السورة كاملة] أولوية أعلى إن كان مفعّلاً: إعادة تشغيل لا نهائية للسورة كاملة
       if (state.loopSurahMode) {
         statusEl.textContent = "إعادة تشغيل السورة كاملة... 🔂";
         audio.currentTime = 0;
@@ -674,6 +675,25 @@
         return;
       }
 
+      // [تكرار الآية/المقطع الحالي] يكرر ٣ مرات متتالية بالضبط ثم يتوقف ويُصفّر العداد
+      if (state.loopAyahMode) {
+        if (ayahLoopCount < AYAH_LOOP_TARGET - 1) {
+          ayahLoopCount += 1;
+          statusEl.textContent = `إعادة التكرار (${toArabicDigits(ayahLoopCount + 1)}/${toArabicDigits(AYAH_LOOP_TARGET)})... 🔁`;
+          audio.currentTime = 0;
+          const p = audio.play();
+          if (p !== undefined) p.catch(() => {});
+          return;
+        }
+        // اكتملت التكرارات الثلاث: أوقف وصفّر العداد
+        ayahLoopCount = 0;
+        playBtn.textContent = "▶️";
+        statusEl.textContent = "اكتمل التكرار ٣ مرات ✅";
+        addPoints(Gamification.POINTS.LISTEN_FULL_SURAH);
+        return;
+      }
+
+      // لا تكرار مفعّل: انتهاء عادي
       playBtn.textContent = "▶️";
       statusEl.textContent = "انتهت التلاوة ✅ يمكنك الاستماع مرة أخرى";
       addPoints(Gamification.POINTS.LISTEN_FULL_SURAH);
@@ -697,6 +717,7 @@
     }
     state.loopAyahMode = false;
     state.loopSurahMode = false;
+    state.resetAyahLoopCount = null;
   }
 
   /* ============================================================
@@ -811,7 +832,12 @@
 
     pendingAdvance = { stationIdx, completedSurahNumber, stationFullyComplete, isFinalStation };
 
+    // أوقف أي تلاوة قرآنية لا تزال قيد التشغيل (بما في ذلك أوضاع التكرار) قبل
+    // تشغيل مؤثر التصفيق، لتفادي تداخل الصوتين بشكل مزعج للطفل
+    stopAudio();
+
     const applause = document.getElementById("applauseAudio");
+    applause.pause();
     applause.currentTime = 0;
     const p = applause.play();
     if (p !== undefined) p.catch(() => {});
@@ -833,8 +859,11 @@
     renderMap();
 
     if (isFinalStation) {
-      // [الميزة 5] حفل التتويج الكبير
+      // [الميزة 5] حفل التتويج الكبير (نهاية الرحلة بأكملها)
       showCoronation();
+    } else if (stationFullyComplete) {
+      // [ميزة جديدة] شهادة تقدير عند إتمام أي محطة/مرحلة على حدة
+      showPhaseCertificate(station);
     } else if (nextInStation) {
       renderRecitationHeader(station);
       loadSurah(stationIdx, nextInStation.number);
@@ -844,6 +873,30 @@
     }
 
     pendingAdvance = null;
+  });
+
+  /* ============================================================
+     [ميزة جديدة] شهادة تقدير تلقائية عند إتمام محطة/مرحلة
+     ============================================================ */
+  function showPhaseCertificate(station) {
+    const surahNames = station.surahProgress.map(s => s.name);
+    const certHTML = Gamification.buildPhaseCertificateHTML(
+      state.childName,
+      state.gender,
+      station.name,
+      surahNames
+    );
+    document.getElementById("phaseCertificateContainer").innerHTML = certHTML;
+    document.getElementById("phaseCertificateModal").classList.add("active");
+  }
+
+  document.getElementById("btnPrintPhaseCertificate").addEventListener("click", () => {
+    window.print();
+  });
+
+  document.getElementById("btnClosePhaseCertificate").addEventListener("click", () => {
+    document.getElementById("phaseCertificateModal").classList.remove("active");
+    showScreen("screen-map");
   });
 
   /* ============================================================
